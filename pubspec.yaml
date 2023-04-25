@@ -1,0 +1,84 @@
+name: vim_mobile
+description: Vehicle Incident Management Ltd
+
+version: 2.5.28+119
+
+environment:
+  sdk: ">=2.2.2 <3.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # flutter_video_compress: ^0.3.7+8
+  # flutter_email_sender: ^3.0.1
+
+  auto_size_text:
+  badges:
+  cached_network_image:
+  card_settings: ^3.3.0
+  carousel_pro:
+  cupertino_icons:
+  date_format:
+  datetime_picker_formfield:
+  dots_indicator:
+  device_info_plus: ^8.2.0
+  dio:
+  flutter_form_builder:
+  permission_handler:
+  flutter_screenutil:
+  flutter_spinkit:
+  #flutter_qr_scanner: ^0.1.5
+  font_awesome_flutter:
+  flutter_launcher_icons:
+  geolocator: 9.0.2
+#  geocoder:
+  geocoder: ^0.2.1
+  http:
+  percent_indicator:
+  image_picker:
+  #multi_image_picker: ^4.6.0
+  #native_device_orientation: ^0.2.0
+  intl:
+  rflutter_alert:
+  shared_preferences:
+  splashscreen:
+  timeline_list:
+  url_launcher:
+  video_player:
+  xlive_switch:
+  syncfusion_flutter_signaturepad:
+  path_provider:
+  flutter_typeahead:
+  flutter_inappwebview:
+  firebase_messaging:  #^8.0.0-dev.14
+  flutter_local_notifications:  #^9.8.0+1
+  firebase_core:
+  upgrader:
+  flutter_masked_text: ^0.8.0
+  # to maintain session
+  local_session_timeout:
+
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/
+
+  fonts:
+    - family: CustomIcons
+      fonts:
+        - asset: assets/fonts/CustomIcons.ttf
+
+    - family: Poppins-Bold
+      fonts:
+        - asset: assets/fonts/Poppins-Bold.ttf
+
+    - family: Poppins-Medium
+      fonts:
+        - asset: assets/fonts/Poppins-Medium.ttf

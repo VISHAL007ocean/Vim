@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "482234037259",
+    "project_id": "vim-ltd",
+    "storage_bucket": "vim-ltd.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:482234037259:android:2d6d5ffcf9295314c7c30e",
+        "android_client_info": {
+          "package_name": "com.vim.vim_mobile"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "482234037259-m6b6dsuhvcc7qk9n9g0rr6q3s7gblajl.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBQ2TZ5AmnfDhhDZf9awEvfydMyL5V-nx0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "482234037259-m6b6dsuhvcc7qk9n9g0rr6q3s7gblajl.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
