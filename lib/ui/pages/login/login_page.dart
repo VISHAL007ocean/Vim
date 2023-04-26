@@ -598,7 +598,11 @@ class _LoginPageState extends State<LoginPage> {
                                         });
                                         print('login data');
                                         print(data1);
-                                        data = data1["depots"];
+                                        try {
+                                          data = data1["depots"];
+                                        } catch (e) {
+                                          print("==Login Error========$data1");
+                                        }
                                         if (data != null &&
                                             (data1["role"] == "Driver")) {
                                           if (data.length == 1) {

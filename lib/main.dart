@@ -29,16 +29,21 @@ import 'ui/pages/driver_checks/start_flt_check.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
-  await PushNotificationService().setupInteractedMessage();
+  try {
+    await Firebase.initializeApp();
+    await PushNotificationService().setupInteractedMessage();
+    RemoteMessage initialMessage =
+        await FirebaseMessaging.instance.getInitialMessage();
+    if (initialMessage != null) {
+      // App received a notification when it was killed
+    }
+  } catch (e) {
+    print("====main.dart = Error=================$e");
+    runApp(new VimApp());
+  }
+  runApp(new VimApp());
   /*final pushNotificationService = Push_Service(_firebaseMessaging);
   pushNotificationService.initialise();*/
-  runApp(new VimApp());
-  RemoteMessage initialMessage =
-      await FirebaseMessaging.instance.getInitialMessage();
-  if (initialMessage != null) {
-    // App received a notification when it was killed
-  }
 }
 
 class VimApp extends StatelessWidget {

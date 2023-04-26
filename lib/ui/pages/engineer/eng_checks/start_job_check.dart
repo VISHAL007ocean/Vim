@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:auto_size_text/auto_size_text.dart';
@@ -7,6 +8,7 @@ import 'package:card_settings/card_settings.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
@@ -129,6 +131,7 @@ class _StartJoBCheckState extends State<StartJoBCheckPage> {
         isSending = false;
       });
     });
+
     super.initState();
   }
 
@@ -170,11 +173,17 @@ class _StartJoBCheckState extends State<StartJoBCheckPage> {
     print("==job id========$jobID==");
 
     if (type == "M") {
-      questions = await getRepairQuestions(compID, jobID: jobID);
+      questions = widget.isPending
+          ? await getRepairQuestions(compID, jobID: jobID)
+          : await getRepairQuestions(compID);
     } else if (type == "I") {
-      questions = await getInstallationQuestions(compID);
+      questions = widget.isPending
+          ? await getInstallationQuestions(compID, jobID: jobID)
+          : await getInstallationQuestions(compID);
     } else if (type == "D") {
-      questions = await getDeInstallationQuestions(compID);
+      questions = widget.isPending
+          ? await getDeInstallationQuestions(compID, jobID: jobID)
+          : await getDeInstallationQuestions(compID);
     }
     // questions = await getInstallationQuestions(companyId);
     cablequestions = widget.isPending
@@ -189,9 +198,8 @@ class _StartJoBCheckState extends State<StartJoBCheckPage> {
 
     print("======questions====${questions}");
 
-    list = [];
-    List<QuestionAnswer> answers = jobCheck.questionAnswer;
-
+    //   GetMaintenanceRepairQuestions
+    answers = jobCheck.questionAnswer;
     if (questions != null) {
       for (var i = 0; i < questions.length; i++) {
         //Instantiate and populate answers
@@ -212,17 +220,17 @@ class _StartJoBCheckState extends State<StartJoBCheckPage> {
         }
 
         //Display the group header if the group name is different to the previous question
-        if (list.length == 0 ||
-            questions[i]["groupName"] != questions[i - 1]["groupName"]) {
-          list.add(new VimCardSettingsHeader(
-            // ADDADD
-            label: questions[i]["groupName"],
-            labelAlign: TextAlign.center,
-            color: vimPrimary,
-          ));
-        }
+        // if (list.length == 0 ||
+        //     questions[i]["groupName"] != questions[i - 1]["groupName"]) {
+        //   list.add(new VimCardSettingsHeader(
+        //     // ADDADD
+        //     label: questions[i]["groupName"],
+        //     labelAlign: TextAlign.center,
+        //     color: vimPrimary,
+        //   ));
+        // }
 
-        QuestionTypes type = QuestionTypes.values[questions[i]["questionType"]];
+        // QuestionTypes type = QuestionTypes.values[questions[i]["questionType"]];
 
         if (widget.isPending) {
           answers[i].notes = questions[i]["notes"];
@@ -230,24 +238,108 @@ class _StartJoBCheckState extends State<StartJoBCheckPage> {
           answers[i].answer = questions[i]["answer"];
           answers[i].qty = double.parse(questions[i]["qty"].toString());
           answers[i].images = [];
+          if (questions[i]["imgUri"] != null) {
+            File file = await getImageFromLink(questions[i]["imgUri"]);
+            answers[i].images.add(file);
+          }
         }
 
         //Question body
-        list.add(processQuestionType(questions[i]["question"], type, answers[i],
-            0, questions[i]["imgdisable"], questions[i]));
+        // list.add(processQuestionType(questions[i]["question"], type, answers[i],
+        //     0, questions[i]["imgdisable"], questions[i]));
+        //
+        // print("================question====${questions[i]}");
+        // print("================ans====${answers[i].notes}");
+        // print("================ans====${answers[i].qty}");
+        // print("================ans====${answers[i].serialNumber}");
+        // print("================ans====${answers[i].answer}");
+        //
+        // list.add(questionDivider());
+      }
+    }
 
-        print("================question====${questions[i]}");
-        print("================ans====${answers[i].notes}");
-        print("================ans====${answers[i].qty}");
-        print("================ans====${answers[i].serialNumber}");
-        print("================ans====${answers[i].answer}");
+    //  GetInstallationCableQuestions
+    cableAnswers = jobCableCheck.questionAnswer;
+    if (cablequestions != null) {
+      for (var i = 0; i < cablequestions.length; i++) {
+        //Instantiate and populate answers
+        if (cableAnswers.length < cablequestions.length) {
+          QuestionAnswer answer = new QuestionAnswer(
+              questionId: cablequestions[i]["questionId"],
+              jobId: jobID,
+              notes: "",
+              answer: "No",
+              qty: 0.0,
+              serialNumber: "",
+              imgdisable: "0");
+          answer.images = new List<File>();
 
-        list.add(questionDivider());
+          cableAnswers.add(answer);
+        }
+
+        if (widget.isPending) {
+          cableAnswers[i].notes = cablequestions[i]["notes"];
+          cableAnswers[i].serialNumber = cablequestions[i]["serialNumber"];
+          cableAnswers[i].answer = cablequestions[i]["answer"];
+          cableAnswers[i].qty =
+              double.parse(cablequestions[i]["qty"].toString());
+          cableAnswers[i].images = [];
+          if (cablequestions[i]["imgUri"] != null) {
+            File file = await getImageFromLink(cablequestions[i]["imgUri"]);
+            cableAnswers[i].images.add(file);
+          }
+        }
+      }
+    }
+
+    //  SET SIGN
+    if (widget.isPending) {
+      if (widget.jobListModel.engineerSign != null) {
+        getImageFromLink(widget.jobListModel.engineerSign).then(
+          (file) {
+            signatureQA.images.add(file);
+            signatureQA.imageData
+                .add(ImageFiles(image: file, imgType: "Eng_Sign"));
+            setState(() {});
+          },
+        );
+      }
+      if (widget.jobListModel.customerSign != null) {
+        getImageFromLink(widget.jobListModel.customerSign).then((file) {
+          signatureQA.images.add(file);
+          signatureQA.imageData.add(ImageFiles(image: file, imgType: ""));
+          setState(() {});
+        });
       }
     }
   }
 
-  List<Widget> list = [];
+  Future<File> getImageFromLink(strURL) async {
+    http.Response responseData = await http.get(
+      // Uri.parse("https://images.unsplash.com/photo-1575936123452-b67c3203c357?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxzZWFyY2h8Mnx8aW1hZ2V8ZW58MHx8MHx8&w=1000&q=80"),
+      Uri.parse(strURL),
+    );
+    print(
+        "=======IMAGE SIGN==${responseData.statusCode}=====${responseData.body}===============");
+
+    if (responseData.statusCode != 200) {
+      responseData = await http.get(
+        Uri.parse(
+            "https://t3.ftcdn.net/jpg/03/45/05/92/360_F_345059232_CPieT8RIWOUk4JqBkkWkIETYAkmz2b75.jpg"),
+      );
+    }
+
+    Uint8List uint8list = responseData.bodyBytes;
+    var buffer = uint8list.buffer;
+    ByteData byteData = ByteData.view(buffer);
+    var tempDir = await getTemporaryDirectory();
+    File file = await File('${tempDir.path}/img').writeAsBytes(
+        buffer.asUint8List(byteData.offsetInBytes, byteData.lengthInBytes));
+    return file;
+  }
+
+  List<QuestionAnswer> answers = [];
+  List<QuestionAnswer> cableAnswers = [];
 
   // init jobcheck
   initialiseJobCheck() {
@@ -487,49 +579,50 @@ class _StartJoBCheckState extends State<StartJoBCheckPage> {
 
   List<Widget> signImageWidget(
       QuestionAnswer answerController, BuildContext context) {
-    List<Widget> list = [];
+    List<Widget> signList = [];
 
     bool multiples =
         answerController.images != null && answerController.images.length > 0;
 
     if (answerController.images != null) {
       answerController.imageData.forEach((image) => {
-            list.add(ListTile(
-              leading: Image(image: FileImage(image.image)),
-              title: AutoSizeText(
-                image.imgType == "Eng_Sign"
-                    ? "Tap to enlarge Engineer Signature"
-                    : "Tap to enlarge Customer Signature",
-                textAlign: TextAlign.left,
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14.0),
+            signList.add(
+              ListTile(
+                leading: Image(image: FileImage(image.image)),
+                title: AutoSizeText(
+                  image.imgType == "Eng_Sign"
+                      ? "Tap to enlarge Engineer Signature"
+                      : "Tap to enlarge Customer Signature",
+                  textAlign: TextAlign.left,
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14.0),
+                ),
+                trailing: GestureDetector(
+                  child: Icon(Icons.delete),
+                  onTap: () {
+                    setState(() {
+                      answerController.images.remove(image.image);
+                      answerController.imageData.remove(image);
+                    });
+                  },
+                ),
+                onTap: () =>
+                    largeImage(Image(image: FileImage(image.image)), context),
               ),
-              trailing: GestureDetector(
-                child: Icon(Icons.delete),
-                onTap: () {
-                  setState(() {
-                    answerController.images.remove(image.image);
-                    answerController.imageData.remove(image);
-                  });
-                },
-              ),
-              onTap: () =>
-                  largeImage(Image(image: FileImage(image.image)), context)
-                      .show,
-            ))
+            )
           });
     }
 
-    list.add(SizedBox(
+    signList.add(SizedBox(
       height: 10,
     ));
-    list.add(Column(
+    signList.add(Column(
       children: [
         showSignaturePad
             ? signaturePadEng(context, answerController, "Eng_Sign")
             : Container()
       ],
     ));
-    list.add(CardSettingsButton(
+    signList.add(CardSettingsButton(
         backgroundColor: vimPrimary,
         label: (showSignaturePad ? "Cancel" : "Add Engineer Signature Image "),
         textColor: Theme.of(context).cardColor,
@@ -538,17 +631,17 @@ class _StartJoBCheckState extends State<StartJoBCheckPage> {
             showSignaturePad = !showSignaturePad;
           });
         }));
-    list.add(SizedBox(
+    signList.add(SizedBox(
       height: 10,
     ));
-    list.add(Column(
+    signList.add(Column(
       children: [
         showSignaturePadCustomer
             ? signaturePad(context, answerController, "Cust_Sign")
             : Container()
       ],
     ));
-    list.add(CardSettingsButton(
+    signList.add(CardSettingsButton(
         backgroundColor: vimPrimary,
         label: (showSignaturePadCustomer
             ? "Cancel"
@@ -560,7 +653,7 @@ class _StartJoBCheckState extends State<StartJoBCheckPage> {
           });
         }));
 
-    return list;
+    return signList;
   }
 
   Widget signaturePad(
@@ -969,7 +1062,7 @@ class _StartJoBCheckState extends State<StartJoBCheckPage> {
           "CLOSE",
           style: TextStyle(color: Colors.white, fontSize: 20),
         ),
-        onPressed: () => Navigator.pop(context),
+        onPressed: () => Navigator.of(context).pop(),
         width: 120,
       )
     ];
@@ -987,7 +1080,7 @@ class _StartJoBCheckState extends State<StartJoBCheckPage> {
       }
 
       var response = await dio.post(url, data: body);
-      print(response.data.toString());
+      print("==========111111111=========" + response.data.toString());
       /* if(type=="M"){
         jobDoneId = response.data["maintenancerepairId"];
       }else if(type=="I"){
@@ -1168,6 +1261,60 @@ class _StartJoBCheckState extends State<StartJoBCheckPage> {
 
   // for UI TODO change done
   List<Widget> getGroups() {
+    List<Widget> list = [];
+    if (questions != null) {
+      for (var i = 0; i < questions.length; i++) {
+        //Instantiate and populate answers
+        if (answers.length < questions.length) {
+          /*QuestionAnswer answer = new QuestionAnswer(
+              questions[i]["questionId"], questions[i]["questionType"], "", "");*/
+
+          // QuestionAnswer answer = new QuestionAnswer(
+          //     questionId: questions[i]["questionId"],
+          //     jobId: jobID,
+          //     notes: "",
+          //     answer: questions[i]["groupName"] == "Simcard" ? "" : "No",
+          //     qty: 0.0,
+          //     serialNumber: "",
+          //     imgdisable: questions[i]["imgdisable"]);
+          // answer.images = new List<File>();
+          // answers.add(answer);
+        }
+
+        //Display the group header if the group name is different to the previous question
+        if (list.length == 0 ||
+            questions[i]["groupName"] != questions[i - 1]["groupName"]) {
+          list.add(new VimCardSettingsHeader(
+            // ADDADD
+            label: questions[i]["groupName"],
+            labelAlign: TextAlign.center,
+            color: vimPrimary,
+          ));
+        }
+
+        QuestionTypes type = QuestionTypes.values[questions[i]["questionType"]];
+
+        // if (widget.isPending) {
+        //   answers[i].notes = questions[i]["notes"];
+        //   answers[i].serialNumber = questions[i]["serialNumber"];
+        //   answers[i].answer = questions[i]["answer"];
+        //   answers[i].qty = double.parse(questions[i]["qty"].toString());
+        //   answers[i].images = [];
+        // }
+
+        //Question body
+        list.add(processQuestionType(questions[i]["question"], type, answers[i],
+            0, questions[i]["imgdisable"], questions[i]));
+
+        // print("================question====${questions[i]}");
+        // print("================ans====${answers[i].notes}");
+        // print("================ans====${answers[i].qty}");
+        // print("================ans====${answers[i].serialNumber}");
+        // print("================ans====${answers[i].answer}");
+
+        list.add(questionDivider());
+      }
+    }
     /*if (cablequestions != null) {
       for (var i = 0; i < cablequestions.length; i++) {
         //Instantiate and populate answers
@@ -1205,24 +1352,32 @@ class _StartJoBCheckState extends State<StartJoBCheckPage> {
 
   List<Widget> getCableGroups() {
     List<Widget> list = [];
-    List<QuestionAnswer> answers = jobCableCheck.questionAnswer;
 
     if (cablequestions != null) {
       for (var i = 0; i < cablequestions.length; i++) {
         //Instantiate and populate answers
-        if (answers.length < cablequestions.length) {
-          QuestionAnswer answer = new QuestionAnswer(
-              questionId: cablequestions[i]["questionId"],
-              jobId: jobID,
-              notes: "",
-              answer: "No",
-              qty: 0.0,
-              serialNumber: "",
-              imgdisable: "0");
-          answer.images = new List<File>();
+        // if (cableAnswers.length < cablequestions.length) {
+        //   QuestionAnswer answer = new QuestionAnswer(
+        //       questionId: cablequestions[i]["questionId"],
+        //       jobId: jobID,
+        //       notes: "",
+        //       answer: "No",
+        //       qty: 0.0,
+        //       serialNumber: "",
+        //       imgdisable: "0");
+        //   answer.images = new List<File>();
+        //
+        //   cableAnswers.add(answer);
+        // }
 
-          answers.add(answer);
-        }
+        // if (widget.isPending) {
+        //   cableAnswers[i].notes = cablequestions[i]["notes"];
+        //   cableAnswers[i].serialNumber = cablequestions[i]["serialNumber"];
+        //   cableAnswers[i].answer = cablequestions[i]["answer"];
+        //   cableAnswers[i].qty =
+        //       double.parse(cablequestions[i]["qty"].toString());
+        //   cableAnswers[i].images = [];
+        // }
 
         //Display the group header if the group name is different to the previous question
         if (list.length == 0 ||
@@ -1240,7 +1395,7 @@ class _StartJoBCheckState extends State<StartJoBCheckPage> {
 
         //Question body
         list.add(processQuestionType(cablequestions[i]["question"], type,
-            answers[i], 1, "0", cablequestions[i]));
+            cableAnswers[i], 1, "0", cablequestions[i]));
 
         list.add(questionDivider());
       }

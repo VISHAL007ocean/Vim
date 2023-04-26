@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:developer';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -17,19 +18,28 @@ Future<dynamic> requestLoginAPI(
 
   dio.options.headers = {
     "Accept": "application/json",
-    "Content-Type": "application/json",
+    "Content-Type": "application/json"
   };
 
   try {
     print("push=====$pushtoken");
+    var response;
 
-    final response = await dio.post(BASE_URL + '/api/login', data: {
-      'userName': username,
-      'password': password,
-      'DeviceToken': pushtoken
-    });
+    try {
+      response = await dio.post(
+        BASE_URL + '/api/login',
+        data: {
+          'userName': username,
+          'password': password,
+          'DeviceToken': pushtoken
+        },
+      );
+    } catch (e) {
+      log("Login ERRRRRRRR ============================== ${e}");
+    }
 
-    print("Login API ============================== ${response}");
+    log("Login API ============================== ${response.data}");
+    log("Login API ==============================");
 
     if (response.statusCode == 200) {
       var responseJson = response.data;

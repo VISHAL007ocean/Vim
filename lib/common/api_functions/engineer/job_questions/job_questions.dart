@@ -5,7 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:vim_mobile/common/functions/getToken.dart';
 import 'package:vim_mobile/consts/consts.dart';
 
-Future<List<dynamic>> getInstallationQuestions(int companyId) async {
+Future<List<dynamic>> getInstallationQuestions(int companyId,
+    {int jobID}) async {
   var token;
   var responseJson;
   var dio = new Dio();
@@ -22,10 +23,11 @@ Future<List<dynamic>> getInstallationQuestions(int companyId) async {
 
   try {
     final response = await dio.get(
-        BASE_URL + '/api/installation/GetInstallationQuestions',
-        queryParameters: {
-          'companyId': companyId,
-        });
+      BASE_URL + '/api/installation/GetInstallationQuestions',
+      queryParameters: jobID != null
+          ? {'companyId': companyId, "jobId": jobID}
+          : {'companyId': companyId},
+    );
 
     responseJson = response.data;
     print("=========GetInstallationQuestions======${response.data}");
@@ -36,7 +38,8 @@ Future<List<dynamic>> getInstallationQuestions(int companyId) async {
   return responseJson;
 }
 
-Future<List<dynamic>> getDeInstallationQuestions(int companyId) async {
+Future<List<dynamic>> getDeInstallationQuestions(int companyId,
+    {int jobID}) async {
   var token;
   var responseJson;
   var dio = new Dio();
@@ -53,10 +56,11 @@ Future<List<dynamic>> getDeInstallationQuestions(int companyId) async {
 
   try {
     final response = await dio.get(
-        BASE_URL + '/api/deinstallation/GetDeInstallationQuestions',
-        queryParameters: {
-          'companyId': companyId,
-        });
+      BASE_URL + '/api/deinstallation/GetDeInstallationQuestions',
+      queryParameters: jobID != null
+          ? {'companyId': companyId, "jobId": jobID}
+          : {'companyId': companyId},
+    );
 
     responseJson = response.data;
 

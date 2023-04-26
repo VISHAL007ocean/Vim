@@ -28,37 +28,41 @@ class JobListModel {
   String make;
   String model;
   String colour;
+  var engineerSign;
+  var customerSign;
 
   JobListModel(
       {this.id,
-        this.reference,
-        this.createdDate,
-        this.createdTime,
-        this.jobCreatedTime,
-        this.depotName,
-        this.registration,
-        this.engineer,
-        this.status,
-        this.jobType,
-        this.location,
-        this.compId,
-        this.vehicle,
-        this.siteContact,
-        this.company,
-        this.siteContactEmail,
-        this.siteContactPhone,
-        this.jobRequest,
-        this.defectReferenceNumber,
-        this.workOrderNumber,
-        this.jobRaised,
-        this.notes,
-        this.previousJob,
-        this.previousJobUrl,
-        this.previousIncident,
-        this.previousIncidentUrl,
-        this.make,
-        this.model,
-        this.colour});
+      this.reference,
+      this.createdDate,
+      this.createdTime,
+      this.jobCreatedTime,
+      this.depotName,
+      this.registration,
+      this.engineer,
+      this.status,
+      this.jobType,
+      this.location,
+      this.compId,
+      this.vehicle,
+      this.siteContact,
+      this.company,
+      this.siteContactEmail,
+      this.siteContactPhone,
+      this.jobRequest,
+      this.defectReferenceNumber,
+      this.workOrderNumber,
+      this.jobRaised,
+      this.notes,
+      this.previousJob,
+      this.previousJobUrl,
+      this.previousIncident,
+      this.previousIncidentUrl,
+      this.make,
+      this.model,
+      this.colour,
+      this.engineerSign,
+      this.customerSign});
 
   JobListModel.fromJson(Map<String, dynamic> json) {
     id = json['id'];
@@ -90,7 +94,8 @@ class JobListModel {
     make = json['make'];
     model = json['model'];
     colour = json['colour'];
-
+    engineerSign = json['engineerSign'];
+    customerSign = json['customerSign'];
   }
 
   Map<String, dynamic> toJson() {
@@ -124,6 +129,8 @@ class JobListModel {
     data['make'] = this.make;
     data['model'] = this.model;
     data['colour'] = this.colour;
+    data['engineerSign'] = this.engineerSign;
+    data['customerSign'] = this.customerSign;
     return data;
   }
 }

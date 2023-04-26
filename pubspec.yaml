@@ -1,7 +1,7 @@
 name: vim_mobile
 description: Vehicle Incident Management Ltd
 
-version: 2.5.28+119
+version: 2.5.29+120
 
 environment:
   sdk: ">=2.2.2 <3.0.0"
